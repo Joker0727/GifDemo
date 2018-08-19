@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2037
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GifDemo", "GifDemo\GifDemo.csproj", "{0B3ED0C4-547A-43FE-99BC-3879BC32D210}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0B3ED0C4-547A-43FE-99BC-3879BC32D210}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B3ED0C4-547A-43FE-99BC-3879BC32D210}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B3ED0C4-547A-43FE-99BC-3879BC32D210}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B3ED0C4-547A-43FE-99BC-3879BC32D210}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5530D9B4-15C5-4E2D-A22F-84CA99AD3C2B}
+	EndGlobalSection
+EndGlobal
