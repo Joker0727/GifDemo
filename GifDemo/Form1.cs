@@ -22,7 +22,7 @@ namespace GifDemo
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            this.MaximizeBox = false;
         }
         private void textBox1_Click(object sender, EventArgs e)
         {
@@ -47,17 +47,43 @@ namespace GifDemo
         {
             string ResourcesFolder = this.textBox1.Text;
             string targetFolder = this.textBox2.Text;
-            int delayTime = 3000;
+            string time = this.textBox3.Text;
 
-            if (string.IsNullOrEmpty(ResourcesFolder) || string.IsNullOrEmpty(targetFolder))
+            if (string.IsNullOrEmpty(ResourcesFolder) || string.IsNullOrEmpty(targetFolder) || string.IsNullOrEmpty(time))
             {
                 MessageBox.Show("文件夹路径不能为空！", "J·Y·T");
                 return;
             }
-
+            int delayTime = int.Parse((double.Parse(time) * 1000).ToString());
             string[] picPathArr = ReadPic(ResourcesFolder);
-            CreateGif(picPathArr, delayTime, targetFolder + @"\jyt.gif");
-
+            string targetPath = targetFolder + @"\jyt.gif";
+            if (File.Exists(targetPath))
+                File.Delete(targetPath);
+            CreateGif(picPathArr, delayTime, targetPath);
+            if (File.Exists(targetPath))
+            {
+                Bitmap picBox = new Bitmap(targetPath);
+                Form2 f2 = new Form2();
+                f2.Show();
+                
+               // this.pictureBox1.Image = picBox;
+            }
+        }
+        private void textBox3_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == 0x20) e.KeyChar = (char)0;  //禁止空格键
+            if ((e.KeyChar == 0x2D) && (((TextBox)sender).Text.Length == 0)) return;   //处理负数
+            if (e.KeyChar > 0x20)
+            {
+                try
+                {
+                    double.Parse(((TextBox)sender).Text + e.KeyChar.ToString());
+                }
+                catch
+                {
+                    e.KeyChar = (char)0;   //处理非法字符
+                }
+            }
         }
         /// <summary>
         /// 生成Gif
@@ -78,7 +104,6 @@ namespace GifDemo
                 gif.AddFrame(Image.FromFile(picPathArr[i]));
             }
             gif.Finish();
-
         }
 
         /// <summary>
@@ -114,6 +139,7 @@ namespace GifDemo
             }
             return resultList.ToArray();
         }
+
 
     }
 }
