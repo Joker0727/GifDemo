@@ -43,6 +43,25 @@ namespace GifDemo
                 this.textBox2.Text = targetFolder.SelectedPath;
             }
         }
+        private void textBox4_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.Multiselect = true;//该值确定是否可以选择多个文件
+            dialog.Title = "请选择文件夹";
+            dialog.Filter = "动态图(*.gif)|*.gif";
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+              this.textBox4.Text = dialog.FileName;
+            }
+            // Filter 属性 赋值为一字符串 用于过滤文件类型;
+            //字符串说明如下：
+            //‘|’分割的两个，一个是注释，一个是真的Filter，显示出来的是那个注释。如果要一次显示多中类型的文件，用分号分开。
+            //如：
+            //Open1.Filter = "图片文件(*.jpg,*.gif,*.bmp)|*.jpg;*.gif;*.bmp";
+            //           则过滤的文件类型为 “|”号 右边的 *.jpg; *.gif; *.bmp 三种类型文件，在OpenDialog / SaveDialog中显示给用户看的文件类型字符串则是 ：“|”号 左边的 图片文件(*.jpg, *.gif, *.bmp)。
+            //再如：
+            //Open1.Filter = "图像文件(*.jpg;*.jpg;*.jpeg;*.gif;*.png)|*.jpg;*.jpeg;*.gif;*.png";
+        }
         private void button1_Click(object sender, EventArgs e)
         {
             string ResourcesFolder = this.textBox1.Text;
@@ -54,6 +73,7 @@ namespace GifDemo
                 MessageBox.Show("文件夹路径不能为空！", "J·Y·T");
                 return;
             }
+
             int delayTime = int.Parse((double.Parse(time) * 1000).ToString());
             string[] picPathArr = ReadPic(ResourcesFolder);
             string targetPath = targetFolder + @"\jyt.gif";
@@ -65,9 +85,21 @@ namespace GifDemo
                 Bitmap picBox = new Bitmap(targetPath);
                 Form2 f2 = new Form2();
                 f2.Show();
-                
-               // this.pictureBox1.Image = picBox;
+                f2.pictureBox1.Image = picBox;
             }
+        }
+        private void button2_Click(object sender, EventArgs e)
+        {
+            string targetFolder = this.textBox2.Text;
+            string gifPath = this.textBox4.Text;
+
+            if (string.IsNullOrEmpty(gifPath) || string.IsNullOrEmpty(targetFolder))
+            {
+                MessageBox.Show("文件夹路径不能为空！", "J·Y·T");
+                return;
+            }
+
+            ExtractGif(gifPath, targetFolder);
         }
         private void textBox3_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -116,7 +148,7 @@ namespace GifDemo
             for (int i = 0, count = gifDecoder.GetFrameCount(); i < count; i++)
             {
                 Image frame = gifDecoder.GetFrame(i); // frame i
-                frame.Save(outputPath + Guid.NewGuid().ToString() + ".png", ImageFormat.Png);
+                frame.Save(outputPath +@"\"+ Guid.NewGuid().ToString() + ".png", ImageFormat.Png);
             }
         }
         /// <summary>
@@ -139,7 +171,6 @@ namespace GifDemo
             }
             return resultList.ToArray();
         }
-
 
     }
 }
