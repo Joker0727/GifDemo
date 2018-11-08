@@ -70,7 +70,7 @@ namespace GifDemo
 
             if (string.IsNullOrEmpty(ResourcesFolder) || string.IsNullOrEmpty(targetFolder) || string.IsNullOrEmpty(time))
             {
-                MessageBox.Show("文件夹路径不能为空！", "J·Y·T");
+                MessageBox.Show("文件夹路径不能为空！", "OldWang");
                 return;
             }
 
@@ -95,7 +95,7 @@ namespace GifDemo
 
             if (string.IsNullOrEmpty(gifPath) || string.IsNullOrEmpty(targetFolder))
             {
-                MessageBox.Show("文件夹路径不能为空！", "J·Y·T");
+                MessageBox.Show("文件夹路径不能为空！", "OldWang");
                 return;
             }
 
@@ -133,11 +133,10 @@ namespace GifDemo
 
             for (int i = 0, count = picPathArr.Length; i < count; i++)
             {
-                gif.AddFrame(Image.FromFile(picPathArr[i]));
+                gif.AddFrame(DealWithPic(picPathArr[i]));
             }
             gif.Finish();
         }
-
         /// <summary>
         /// 提取Gif中的没一张图片
         /// </summary>
@@ -171,6 +170,114 @@ namespace GifDemo
             }
             return resultList.ToArray();
         }
+        /// <summary>
+        /// 处理图片
+        /// </summary>
+        /// <param name="picPath"></param>
+        /// <returns></returns>
+        public static Bitmap DealWithPic(string picPath)
+        {
+            Bitmap bitmap = new Bitmap(picPath);
+            return bitmap;
+        }
+        /// <summary>
+        /// 缩放类型枚举
+        /// </summary>
+        public enum ZoomType { NearestNeighborInterpolation, BilinearInterpolation }
+        /// <summary>
+        /// 图像缩放
+        /// </summary>
+        /// <param name="srcBmp">原始图像</param>
+        /// <param name="width">目标图像宽度</param>
+        /// <param name="height">目标图像高度</param>
+        /// <param name="dstBmp">目标图像</param>
+        /// <param name="GetNearOrBil">缩放选用的算法</param>
+        /// <returns>处理成功 true 失败 false</returns>
+        public static bool Zoom(Bitmap srcBmp, double ratioW, double ratioH, out Bitmap dstBmp, ZoomType zoomType)
+        {
+            //ZoomType为自定义的枚举类型
+            if (srcBmp == null)
+            {
+                dstBmp = null;
+                return false;
+            }
+            //若缩放大小与原图一样，则返回原图不做处理
+            if ((ratioW == 1.0) && ratioH == 1.0)
+            {
+                dstBmp = new Bitmap(srcBmp);
+                return true;
+            }
+            //计算缩放高宽
+            double height = ratioH * (double)srcBmp.Height;
+            double width = ratioW * (double)srcBmp.Width;
+            dstBmp = new Bitmap((int)width, (int)height);
 
+            BitmapData srcBmpData = srcBmp.LockBits(new Rectangle(0, 0, srcBmp.Width, srcBmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+            BitmapData dstBmpData = dstBmp.LockBits(new Rectangle(0, 0, dstBmp.Width, dstBmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
+            unsafe
+            {
+                byte* srcPtr = null;
+                byte* dstPtr = null;
+                int srcI = 0;
+                int srcJ = 0;
+                double srcdI = 0;
+                double srcdJ = 0;
+                double a = 0;
+                double b = 0;
+                double F1 = 0;//横向插值所得数值
+                double F2 = 0;//纵向插值所得数值
+                if (zoomType == ZoomType.NearestNeighborInterpolation)
+                {//邻近插值法
+
+                    for (int i = 0; i < dstBmp.Height; i++)
+                    {
+                        srcI = (int)(i / ratioH);//srcI是此时的i对应的原图像的高
+                        srcPtr = (byte*)srcBmpData.Scan0 + srcI * srcBmpData.Stride;
+                        dstPtr = (byte*)dstBmpData.Scan0 + i * dstBmpData.Stride;
+                        for (int j = 0; j < dstBmp.Width; j++)
+                        {
+                            dstPtr[j * 3] = srcPtr[(int)(j / ratioW) * 3];//j / ratioW求出此时j对应的原图像的宽
+                            dstPtr[j * 3 + 1] = srcPtr[(int)(j / ratioW) * 3 + 1];
+                            dstPtr[j * 3 + 2] = srcPtr[(int)(j / ratioW) * 3 + 2];
+                        }
+                    }
+                }
+                else if (zoomType == ZoomType.BilinearInterpolation)
+                {//双线性插值法
+                    byte* srcPtrNext = null;
+                    for (int i = 0; i < dstBmp.Height; i++)
+                    {
+                        srcdI = i / ratioH;
+                        srcI = (int)srcdI;//当前行对应原始图像的行数
+                        srcPtr = (byte*)srcBmpData.Scan0 + srcI * srcBmpData.Stride;//指原始图像的当前行
+                        srcPtrNext = (byte*)srcBmpData.Scan0 + (srcI + 1) * srcBmpData.Stride;//指向原始图像的下一行
+                        dstPtr = (byte*)dstBmpData.Scan0 + i * dstBmpData.Stride;//指向当前图像的当前行
+                        for (int j = 0; j < dstBmp.Width; j++)
+                        {
+                            srcdJ = j / ratioW;
+                            srcJ = (int)srcdJ;//指向原始图像的列
+                            if (srcdJ < 1 || srcdJ > srcBmp.Width - 1 || srcdI < 1 || srcdI > srcBmp.Height - 1)
+                            {//避免溢出（也可使用循环延拓）
+                                dstPtr[j * 3] = 255;
+                                dstPtr[j * 3 + 1] = 255;
+                                dstPtr[j * 3 + 2] = 255;
+                                continue;
+                            }
+                            a = srcdI - srcI;//计算插入的像素与原始像素距离（决定相邻像素的灰度所占的比例）
+                            b = srcdJ - srcJ;
+                            for (int k = 0; k < 3; k++)
+                            {//插值    公式：f(i+p,j+q)=(1-p)(1-q)f(i,j)+(1-p)qf(i,j+1)+p(1-q)f(i+1,j)+pqf(i+1, j + 1)
+                                F1 = (1 - b) * srcPtr[srcJ * 3 + k] + b * srcPtr[(srcJ + 1) * 3 + k];
+                                F2 = (1 - b) * srcPtrNext[srcJ * 3 + k] + b * srcPtrNext[(srcJ + 1) * 3 + k];
+                                dstPtr[j * 3 + k] = (byte)((1 - a) * F1 + a * F2);
+                            }
+                        }
+                    }
+                }
+            }
+            srcBmp.UnlockBits(srcBmpData);
+            dstBmp.UnlockBits(dstBmpData);
+            return true;
+        }
     }
 }
